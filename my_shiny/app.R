@@ -20,11 +20,17 @@ ui <- fluidPage(
     # Application title
     titlePanel("This is a new Shiny App"),
     includeMarkdown("references.md"),
+    sidebarLayout(
+        sidebarPanel( 
     selectInput("select", label= h3("Plot by type of alimentation"),
                 choices=character(0),
-                selected=1),
+                selected=1)
+    ),
+    mainPanel(
     h3("Plots"),
     plotOutput(outputId = "plot")
+    )
+    )
     
 )
 
