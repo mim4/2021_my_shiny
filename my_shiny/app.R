@@ -20,11 +20,13 @@ ui <- fluidPage(
     plotOutput(outputId = "plot")
     
 )
-data = runif(20)
+
 # Define server logic required to draw a histogram
 server <- function(input, output) {
     output$plot = renderPlot({
-        plot(data)
+        ggplot(msleep, aes(bodywt, sleep_total, colour = vore)) +
+            scale_x_log10() +
+            geom_point() + facet_wrap(~ vore, nrow = 2)
     })
 
    
