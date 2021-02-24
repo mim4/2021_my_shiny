@@ -15,11 +15,9 @@ list_choices = list_choices[!is.na(list_choices)]
 names(list_choices) = paste0(list_choices,"vore")
 
 # Define UI for application that draws a histogram
-ui <- fluidPage(
-
-    # Application title
-    titlePanel("This is a new Shiny App"),
-    includeMarkdown("references.md"),
+ui <- navbarPage( "ShinyApp",
+    tabPanel("msleep",
+    fluidPage(
     sidebarLayout(
         sidebarPanel( 
     selectInput("select", label= h3("Plot by type of alimentation"),
@@ -32,7 +30,12 @@ ui <- fluidPage(
     )
     )
     
-)
+)),
+tabPanel("References",
+         includeMarkdown("references.md")
+) #  titlePanel
+) # navbarPage
+
 
 col_scale <- scale_colour_discrete(limits = list_choices)
 
