@@ -32,7 +32,15 @@ ui <- navbarPage( "ShinyApp",
     
 )),
 tabPanel("References",
-         includeMarkdown("references.md")
+         p(tags$button(class="btn btn-default", 
+                       `data-toggle`="collapse", 
+                       `data-target`="#hola",
+                       "References")),
+         div(class="collapse", id="hola",
+             div(class="card card-body",
+                 includeMarkdown("references.md")
+             )),
+         
 ) #  titlePanel
 ) # navbarPage
 
