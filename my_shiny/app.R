@@ -7,8 +7,10 @@
 #    http://shiny.rstudio.com/
 #
 
-library(shiny)
-library(tidyverse)
+require(shiny)
+require(tidyverse)
+require("shinyjs")
+require(ggplot2)
 
 list_choices <-  unique(msleep$vore)
 list_choices = list_choices[!is.na(list_choices)]
@@ -26,7 +28,8 @@ ui <- navbarPage( "ShinyApp",
     ),
     mainPanel(
     h3("Plots"),
-    plotOutput(outputId = "plot")
+    plotOutput(outputId = "plot", click = "plot_click"),
+    tableOutput("info")
     )
     )
     
@@ -39,12 +42,23 @@ tabPanel("Random generator",
                                        selected = 1),
                            sliderInput("n_sample", label = h3("Number of samples"), min = 10, 
                                        max = 100, value = 50),
-                           sliderInput("n_bins", label = h3("Number of bins"), min = 1, 
-                                       max = 50, value = 30)
+                           fluidRow(
+                               h3(style = "margin-left: 20px; margin-bottom: 0px;", "Number of bins"),
+                               column(2,
+                                      div(style = "margin-top: 37px", checkboxInput("auto_bins", label = "auto", value = TRUE))
+                               ),
+                               column(10,
+                                      sliderInput("n_bins", label="", min = 1, max = 50, value = 30)
+                               )
+                           )
                        ), # sidebarPanel
                        mainPanel(
-                           plotOutput(outputId = "pulpo")
-                       ) # mainPanel
+                           tabsetPanel(type = "tabs",
+                                   tabPanel("Plot", plotOutput("histPlot")),
+                                   tabPanel("Summary", verbatimTextOutput("histSummary")),
+                                   tabPanel("Table", tableOutput("histTable"))
+                       )
+                       )
          ) # sidebarLayout
 ), #  tabPanel
 tabPanel("References",
@@ -57,7 +71,8 @@ tabPanel("References",
                  includeMarkdown("references.md")
              )),
          
-) #  titlePanel
+), #  tabPanel
+useShinyjs()
 ) # navbarPage
 
 
@@ -78,9 +93,32 @@ server <- function(input, output, session) {
             geom_point()
     })
     
-    cmd = reactive(eval(parse(text=paste(input$dist,"(",input$n_sample,")"))));
+    output$info = renderTable({
+        nearPoints(msleep 
+                   %>% select(name, bodywt,  sleep_total, sleep_rem, sleep_cycle ), 
+                   input$plot_click, threshold = 10, maxpoints = 1,
+                   addDist = TRUE)
+        
+        # to show just the coordinates paste0("x=", input$plot_click$x, "\ny=", input$plot_click$y)
+         # to show all the info: toString(input$plot_click)
     
-    output$pulpo = renderPlot(hist(cmd()))
+    })
+    
+    samples <- reactive({
+        dist <- eval(parse(text=paste(input$dist)))
+        dist(input$n_sample)
+    })
+    
+ 
+    
+    observe(if(input$auto_bins) disable("n_bins") else enable("n_bins"))
+    
+    output$histPlot <- renderPlot(
+        hist(samples(), main="Random Generation",col = "royalblue", 
+             breaks = if(!input$auto_bins) {input$n_bins} else {"Sturges"})
+    )
+    output$histSummary <- renderPrint(summary(samples()))
+    output$histTable <- renderTable(samples())
 
    
 }
